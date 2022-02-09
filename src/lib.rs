@@ -2,7 +2,7 @@ mod bdes {
     pub trait Chain {
         fn head(&self) -> BdesBlock;
         fn append(&mut self, block: BdesBlock) -> bool;
-        fn length(&self) -> i64;
+        fn length(&self) -> usize;
     }
 
     pub struct BdesBlock {
@@ -14,7 +14,12 @@ mod bdes {
         pub entity: String,
         pub blocks: Vec<BdesBlock>
     }
-    
+
+    pub fn construct_chain(entity: &str) -> BdesChain {
+        let mut vec : Vec<BdesBlock> = Vec::new();
+        let mut chain = BdesChain { entity: entity.to_string(), blocks: vec};
+        return chain;
+    }
 
     impl Chain for BdesChain {
         fn head(&self) -> BdesBlock {
@@ -26,8 +31,8 @@ mod bdes {
             return true;
         }
 
-        fn length(&self) -> i64 {
-            return 0;
+        fn length(&self) -> usize {
+            return self.blocks.len();
         }
     }
 }
@@ -39,9 +44,7 @@ mod tests {
 
     #[test]
     fn create_chain() {
-        let mut chain = bdes::BdesChain::new();
-
-        chain.entity = "Document".to_string();
+        let mut chain = bdes::construct_chain("Document");
 
         let data = "hello world".to_string();
         let metadata = "this is some metadata".to_string();
