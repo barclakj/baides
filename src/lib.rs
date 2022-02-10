@@ -1,6 +1,6 @@
 mod bdes {
     pub trait Chain {
-        fn head(&self) -> BdesBlock;
+        fn head(&self) -> &BdesBlock;
         fn append(&mut self, block: BdesBlock) -> bool;
         fn length(&self) -> usize;
     }
@@ -22,8 +22,8 @@ mod bdes {
     }
 
     impl Chain for BdesChain {
-        fn head(&self) -> BdesBlock {
-            return BdesBlock { data: "".to_string(), metadata: "".to_string()};
+        fn head(&self) -> &BdesBlock {
+            return &self.blocks[self.length()-1];
         }
 
         fn append(&mut self, block: BdesBlock) -> bool {
@@ -56,6 +56,8 @@ mod tests {
         let last_block = chain.head();
 
         println!("Data: {}", last_block.data);
+
+        assert!(last_block.data.eq("hello world"));
 
         assert!(chain.length()==1);
     }
