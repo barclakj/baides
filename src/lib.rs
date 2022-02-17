@@ -1,4 +1,6 @@
 mod baides {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
     pub trait Chain {
         fn head(&self) -> Option<&BdesBlock>;
         fn append(&mut self, data: String, metadata: String) -> bool;
@@ -8,8 +10,9 @@ mod baides {
     pub struct BdesBlock {
         pub data: String,
         pub metadata: String,
-        pub idx: u64,
+        pub idx: u128,
         pub hash: String,
+        pub ts: u128,
     }
 
     pub struct BdesChain {
@@ -32,9 +35,10 @@ mod baides {
         }
 
         fn append(&mut self, data: String, metadata: String) -> bool {
-            let mut idx: u64 = 0;
+            let mut idx: u128 = 0;
             let mut hashable_string: String;
             let current_head = self.head();
+            let ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
             match current_head {
                 Some(block) => { 
                     idx = block.idx + 1; 
@@ -45,10 +49,9 @@ mod baides {
                     hashable_string = "".to_string();
                 },
             }
-            // let hash = hmac_sha256::hash("abc")
-            let hash = hashable_string;
+            let hash = base64::encode(hmac_sha256::Hash::hash(hashable_string.as_bytes()));
 
-            let block = BdesBlock { data: data, metadata: metadata, idx: idx, hash: hash };
+            let block = BdesBlock { data: data, metadata: metadata, idx: idx, hash: hash, ts: ts };
             self.blocks.push(block);
             return true;
         }
@@ -84,5 +87,11 @@ mod tests {
         }
         
         assert!(chain.length()==1);
+
+        let h = hmac_sha256::Hash::hash(b"ooo");
+
+        let st = base64::encode(h);
+
+        println!("Hashed string: {}", st);
     }
 }
