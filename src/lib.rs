@@ -3,16 +3,17 @@ mod baides {
     use std::fs::OpenOptions;
     use std::io::Write;
     use std::fs::File;
+    use uuid::Uuid;
     
 
     pub trait Chain {
         fn head(&self) -> Option<&BdesBlock>;
-        fn append(&mut self, key: String, mime_type: String, data: String) -> bool;
+        fn append(&mut self, mime_type: String, data: String) -> bool;
         fn length(&self) -> usize;
     }
 
     pub trait Block {
-        fn to_string(&self) -> String;
+        fn serialize(&self, w: &dyn Write);
     }
 
     pub struct BdesBlock {
@@ -39,7 +40,7 @@ mod baides {
         return chain;
     }
 
-    impl Block for BdesBlock {
+    impl ToString for BdesBlock {
         fn to_string(&self) -> String {
             let mut _data: String = "^B".to_string();
             _data.push_str(&self.idx.to_string());
@@ -55,6 +56,13 @@ mod baides {
         }
     } 
 
+    impl Block for BdesBlock {
+        fn serialize(&self, w: &dyn Write) {
+            let s = self.to_string();
+            w.write_all(s.as_bytes());
+        }
+    }
+
     impl Chain for BdesChain {
         fn head(&self) -> Option<&BdesBlock> {
             if self.length()>0 {
@@ -63,9 +71,11 @@ mod baides {
             None   
         }
 
-        fn append(&mut self, key: String, mime_type: String, data: String) -> bool {
+        fn append(&mut self, mime_type: String, data: String) -> bool {
             let mut idx: u64 = 0;
             let ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+
+            let key = Uuid::new_v4().to_string();
 
             let mut _data: String = data.clone();
             let mut _data_hash: String = base64::encode(hmac_sha256::Hash::hash(_data.as_bytes()));
@@ -109,7 +119,7 @@ mod tests {
         let data = "hello world".to_string();
         let mime_type = "application/octetstream".to_string();
 
-        chain.append("uuid".to_string(), mime_type, data);
+        chain.append(mime_type, data);
 
         let last_block = chain.head();
 
